@@ -1,9 +1,9 @@
 const analyticsTools = {
-    logging: true,
+    logging: false,
     ga4: {
         enabled: true,
-        debug_mode: true,
-        id: 'G-LQ2EEY9CXP',
+        debug_mode: false,
+        id: 'G-XXXXXXXXXX',
         sendEvent: function (eventName, eventData) {
             // send event to Google Analytics 4
             gtag('event', eventName, eventData);
@@ -11,7 +11,7 @@ const analyticsTools = {
     },
     gtm: {
         enabled: true,
-        id: 'GTM-TRGXFL',
+        id: 'GTM-XXXXXXXXXX',
         sendEvent: function (eventName, eventData) {
             // send event to Google Tag Manager
             dataLayer.push({ event: eventName, ...eventData });
@@ -19,7 +19,7 @@ const analyticsTools = {
     },
     fbq: {
         enabled: true,
-        id: 'XXXXX',
+        id: 'XXXXXXXXXX',
         sendEvent: function (eventName, eventData) {
             // send event to Facebook Pixel
             fbq('track', eventName, eventData);
