@@ -21,6 +21,7 @@ Note that the code is written assuming that the analytics object already exists 
 For more information on how to create a Google Tag Manager custom pixel or custom pixel code, please refer to these links:
 - [Google Tag Manager Custom Pixel Tutorial](https://help.shopify.com/en/manual/promoting-marketing/pixels/custom-pixels/gtm-tutorial)
 - [Custom Pixel Code](https://help.shopify.com/en/manual/promoting-marketing/pixels/custom-pixels/code)
+
 For a list of available customer events, refer to the Customer [Events Reference](https://shopify.dev/docs/api/pixels/customer-events#standard-events).
 
 ## Configuration
