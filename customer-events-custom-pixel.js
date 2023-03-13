@@ -1,44 +1,31 @@
 const analyticsTools = {
-    logging: false,
-    ga4: {
-        enabled: true,
-        debug_mode: false,
-        id: 'G-XXXXXXXXXX',
-        sendEvent: function (eventName, eventData) {
-            // send event to Google Analytics 4
-            gtag('event', eventName, eventData);
-        },
-    },
-    gtm: {
-        enabled: true,
-        id: 'GTM-XXXXXXXXXX',
-        sendEvent: function (eventName, eventData) {
-            // send event to Google Tag Manager
-            dataLayer.push({ event: eventName, ...eventData });
-        }
-    },
-    fbq: {
-        enabled: true,
-        id: 'XXXXXXXXXX',
-        sendEvent: function (eventName, eventData) {
-            // send event to Facebook Pixel
-            fbq('track', eventName, eventData);
-        }
-    }
+  logging: false,
+  ga4: {
+    enabled: true,
+    debug_mode: false,
+    id: 'G-XXXXXXXXXX',
+  },
+  gtm: {
+    enabled: true,
+    id: 'GTM-XXXXXXXXXX',
+  },
+  fbq: {
+    enabled: true,
+    id: 'XXXXXXXXXX',
+  },
 };
 
 function log(message = '') {
-    window.console.log(message);
+  window.console.log(message);
 }
 
 window.dataLayer = window.dataLayer || [];
 
 const gtag = function () {
-    dataLayer.push(arguments);
+  dataLayer.push(arguments);
 };
 
-if (analyticsTools.ga4.enabled) {
-  // Initialize Google Analytics 4
+function initializeGoogleAnalytics4() {
   log(`Initializing Google Analytics 4 with ID ${analyticsTools.ga4.id}`);
   const script = document.createElement('script');
   script.setAttribute(
@@ -54,7 +41,7 @@ if (analyticsTools.ga4.enabled) {
   });
 }
 
-if (analyticsTools.fbq.enabled) {
+function initializeFacebookPixel() {
   log(`Initializing Facebook Meta Pixel with ID ${analyticsTools.fbq.id}`);
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -67,7 +54,7 @@ if (analyticsTools.fbq.enabled) {
   fbq('init', analyticsTools.fbq.id);
 }
 
-if (analyticsTools.gtm.enabled) {
+function initializeGoogleTagManager() {
   log(`Initializing Google Tag Manager with ID ${analyticsTools.gtm.id}`);
   (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -76,23 +63,38 @@ if (analyticsTools.gtm.enabled) {
   })(window,document,'script','dataLayer', analyticsTools.gtm.id);
 }
 
-// Step 2. Subscribe to customer events using the analytics.subscribe() API
-analytics.subscribe("collection_viewed", async (event) => {
+function sendEventToGoogleAnalytics4(eventName, eventData) {
   if (analyticsTools.ga4.enabled) {
-    analyticsTools.ga4.sendEvent("view_item_list", event.data);
+    gtag('event', eventName, eventData);
   }
+}
+
+function sendEventToGoogleTagManager(eventName, eventData) {
   if (analyticsTools.gtm.enabled) {
-    analyticsTools.gtm.sendEvent("collection_viewed", event.data);
+    dataLayer.push({ event: eventName, ...eventData });
   }
+}
+
+function sendEventToFacebookPixel(eventName, eventData) {
   if (analyticsTools.fbq.enabled) {
-    analyticsTools.fbq.sendEvent("ViewContent", {
-      content_ids: [event.data.collection.id],
-      content_type: 'product_group',
-    });
+    fbq('track', eventName, eventData);
   }
+}
+
+// Step 2. Subscribe to customer events using the analytics.subscribe() API
+
+// collection_viewed
+analytics.subscribe("collection_viewed", async (event) => {
+  sendEventToGoogleAnalytics4("view_item_list", event.data);
+  sendEventToGoogleTagManager("collection_viewed", event.data);
+  sendEventToFacebookPixel("ViewContent", {
+    content_ids: [event.data.collection.id],
+    content_type: 'product_group',
+  });
   if(analyticsTools.logging) log(JSON.stringify(event));
 });
 
+// page_viewed
 analytics.subscribe("page_viewed", async (event) => {
   const href = event.context.document.location.href;
   let data = {
@@ -100,39 +102,29 @@ analytics.subscribe("page_viewed", async (event) => {
     page_title: event.context.document.title,
     page_referrer: event.context.document.referrer,
     language: event.context.language,
-  }
-  if (analyticsTools.ga4.enabled) {
-    analyticsTools.ga4.sendEvent("page_view", data);
-  }
-  if (analyticsTools.gtm.enabled) {
-    analyticsTools.gtm.sendEvent("page_viewed", data);
-  }
-  if (analyticsTools.fbq.enabled) {
-    analyticsTools.fbq.sendEvent("PageView");
-  }
+  };
+  
+  sendEventToGoogleAnalytics4("page_view", data);
+  sendEventToGoogleTagManager("page_viewed", data);
+  sendEventToFacebookPixel("PageView");
+  
   if (href.includes("/cart")) {
-    analyticsTools.ga4.sendEvent("view_cart", data);
-    analyticsTools.gtm.sendEvent("cart_viewed", data);
+    sendEventToGoogleAnalytics4("view_cart", data);
+    sendEventToGoogleTagManager("cart_viewed", data);
   }
   if (href.includes("/information")) {
-    if (analyticsTools.ga4.enabled) {
-      analyticsTools.ga4.sendEvent("add_contact_information", data);
-    }
-    if (analyticsTools.gtm.enabled) {
-      analyticsTools.gtm.sendEvent("contact_step_viewed", data);
-    }
+    sendEventToGoogleAnalytics4("add_contact_information", data);
+    sendEventToGoogleTagManager("contact_step_viewed", data);
   }
   if (href.includes("/shipping")) {
-    if (analyticsTools.ga4.enabled) {
-      analyticsTools.ga4.sendEvent("add_shipping_info", data);
-    }
-    if (analyticsTools.gtm.enabled) {
-      analyticsTools.gtm.sendEvent("shipping_step_viewed", data);
-    }
+    sendEventToGoogleAnalytics4("add_shipping_info", data);
+    sendEventToGoogleTagManager("shipping_step_viewed", data);
   }
+  
   if(analyticsTools.logging) log(JSON.stringify(event));
 });
 
+// product_viewed
 analytics.subscribe("product_viewed", async (event) => {
   let data = {
     currency: event.data.productVariant.price.currencyCode,
@@ -150,40 +142,31 @@ analytics.subscribe("product_viewed", async (event) => {
       }
     ],
   };
-  // Send events to analytics tools
-  if (analyticsTools.ga4.enabled) {
-    analyticsTools.ga4.sendEvent("view_item", data);
-  }
-  if (analyticsTools.gtm.enabled) {
-    analyticsTools.gtm.sendEvent("product_viewed", data);
-  }
-  if (analyticsTools.fbq.enabled) {
-    analyticsTools.fbq.sendEvent("ViewContent", {
-      content_ids: [event.data.productVariant.id],
-      content_name: event.data.productVariant.title,
-      currency: event.data.productVariant.price.currencyCode,
-      value: event.data.productVariant.price.amount,
-    });
-  }
+  
+  sendEventToGoogleAnalytics4("view_item", data);
+  sendEventToGoogleTagManager("product_viewed", data);
+  sendEventToFacebookPixel("ViewContent", {
+    content_ids: [event.data.productVariant.id],
+    content_name: event.data.productVariant.title,
+    currency: event.data.productVariant.price.currencyCode,
+    value: event.data.productVariant.price.amount,
+  });
+  
   if(analyticsTools.logging) log(JSON.stringify(event));
 });
 
+// search_submitted
 analytics.subscribe("search_submitted", async (event) => {
-  // Send events to analytics tools
-  if (analyticsTools.ga4.enabled) {
-    analyticsTools.ga4.sendEvent("search", { search_term: event.data.searchResult.query });
-  }
-  if (analyticsTools.gtm.enabled) {
-    analyticsTools.gtm.sendEvent("search_submitted", { search_term: event.data.searchResult.query });
-  }
-  if (analyticsTools.fbq.enabled) {
-    analyticsTools.fbq.sendEvent("Search", {
-      search_string: event.searchResult.query
-    });
-  }
+  sendEventToGoogleAnalytics4("search", { search_term: event.data.searchResult.query });
+  sendEventToGoogleTagManager("search_submitted", { search_term: event.data.searchResult.query });
+  sendEventToFacebookPixel("Search", {
+    search_string: event.searchResult.query
+  });
+  
   if(analyticsTools.logging) log(JSON.stringify(event));
 });
 
+// product_added_to_cart
 analytics.subscribe("product_added_to_cart", async (event) => {
   if(event.data.cartLine.merchandise.price.amount > 0) {
     let data = {
@@ -206,98 +189,88 @@ analytics.subscribe("product_added_to_cart", async (event) => {
     }
 
     // Send events to analytics tools
-    if (analyticsTools.ga4.enabled) {
-      analyticsTools.ga4.sendEvent('add_to_cart', data);
-    }
-
-    if (analyticsTools.gtm.enabled) {
-      analyticsTools.gtm.sendEvent('item_added', data);
-    }
-
-    if (analyticsTools.fbq.enabled) {
-      analyticsTools.fbq.sendEvent('AddToCart', {
-        content_ids: [event.data.cartLine.merchandise.product.id],
-        content_name: event.data.cartLine.merchandise.product.title,
-        currency: event.data.cartLine.merchandise.price.currencyCode,
-        value: event.data.cartLine.merchandise.price.amount,
-      });
-    }
+    sendEventToGoogleAnalytics4('add_to_cart', data);
+    sendEventToGoogleTagManager('item_added', data);
+    sendEventToFacebookPixel('AddToCart', {
+      content_ids: [event.data.cartLine.merchandise.product.id],
+      content_name: event.data.cartLine.merchandise.product.title,
+      currency: event.data.cartLine.merchandise.price.currencyCode,
+      value: event.data.cartLine.merchandise.price.amount,
+    });
   }
   if(analyticsTools.logging) log(JSON.stringify(event));
 });
 
+// checkout_started
 analytics.subscribe("checkout_started", async (event) => {
-  if(event.data.checkout.totalPrice.amount > 0) {
-    let items = []
-    for (const item of event.data.checkout.lineItems) {
-      items.push({
-        item_id: item.variant.product.id,
-        item_name: item.variant.product.title,
-        item_brand: item.variant.product.vendor,
-        item_variant: item.variant.title,
-        item_sku: item.variant.sku,
-        price: item.variant.price.amount,
-        currency: item.variant.price.currencyCode,
-        quantity: item.quantity
-      });
-    }
-    let data = {
+  if (event.data.checkout.totalPrice.amount > 0) {
+    const items = event.data.checkout.lineItems.map((item) => ({
+      item_id: item.variant.product.id,
+      item_name: item.variant.product.title,
+      item_brand: item.variant.product.vendor,
+      item_variant: item.variant.title,
+      item_sku: item.variant.sku,
+      price: item.variant.price.amount,
+      currency: item.variant.price.currencyCode,
+      quantity: item.quantity,
+    }));
+
+    const data = {
       currency: event.data.checkout.currencyCode,
       value: event.data.checkout.totalPrice.amount,
-      items: items,
-    }
-    analyticsTools.ga4.sendEvent("begin_checkout", data);
-    analyticsTools.gtm.sendEvent("checkout", data);
-    analyticsTools.fbq.sendEvent('InitiateCheckout', {
+      items,
+    };
+
+    sendEventToGoogleAnalytics4("begin_checkout", data);
+    sendEventToGoogleTagManager("checkout", data);
+    sendEventToFacebookPixel("InitiateCheckout", {
       value: event.data.checkout.totalPrice.amount,
       currency: event.data.checkout.currencyCode,
       content_type: 'product',
-      content_ids: event.data.checkout.lineItems.map(item => item.variant.product.id),
-      contents: event.data.checkout.lineItems.map(item => ({
-        id: item.variant.product.id,
+      content_ids: items.map((item) => item.item_id),
+      contents: items.map((item) => ({
+        id: item.item_id,
         quantity: item.quantity,
-        price: item.variant.price.amount,
+        price: item.price,
       })),
     });
   }
-  if(analyticsTools.logging) log(JSON.stringify(event));
 });
 
+// payment_info_submitted
 analytics.subscribe("payment_info_submitted", async (event) => {
-  if(event.data.checkout.totalPrice.amount > 0) {
-    let items = []
-    for (const item of event.data.checkout.lineItems) {
-      items.push({
-        item_id: item.variant.product.id,
-        item_name: item.variant.product.title,
-        item_brand: item.variant.product.vendor,
-        item_variant: item.variant.title,
-        item_sku: item.variant.sku,
-        price: item.variant.price.amount,
-        currency: item.variant.price.currencyCode,
-        quantity: item.quantity
-      });
-    }
-    let data = {
+  if (event.data.checkout.totalPrice.amount > 0) {
+    const items = event.data.checkout.lineItems.map((item) => ({
+      item_id: item.variant.product.id,
+      item_name: item.variant.product.title,
+      item_brand: item.variant.product.vendor,
+      item_variant: item.variant.title,
+      item_sku: item.variant.sku,
+      price: item.variant.price.amount,
+      currency: item.variant.price.currencyCode,
+      quantity: item.quantity,
+    }));
+
+    const data = {
       currency: event.data.checkout.currencyCode,
       value: event.data.checkout.totalPrice.amount,
-      items: items
-    }
-    analyticsTools.ga4.sendEvent("add_payment_info", data);
-    analyticsTools.gtm.sendEvent("payment_step_viewed", data);
-    analyticsTools.fbq.sendEvent('AddPaymentInfo', {
+      items,
+    };
+
+    sendEventToGoogleAnalytics4("add_payment_info", data);
+    sendEventToGoogleTagManager("payment_step_viewed", data);
+    sendEventToFacebookPixel("AddPaymentInfo", {
       value: event.data.checkout.totalPrice.amount,
       currency: event.data.checkout.currencyCode,
     });
   }
-  if(analyticsTools.logging) log(JSON.stringify(event));
 });
 
+// checkout_completed
 analytics.subscribe("checkout_completed", async (event) => {
-  if(event.data.checkout.totalPrice.amount > 0) {
-    let items = []
-    for (const item of event.data.checkout.lineItems) {
-      items.push({
+  if (event.data.checkout.totalPrice.amount > 0) {
+    const items = event.data.checkout.lineItems.map(item => {
+      return {
         item_id: item.variant.product.id,
         item_name: item.variant.product.title,
         item_brand: item.variant.product.vendor,
@@ -306,19 +279,29 @@ analytics.subscribe("checkout_completed", async (event) => {
         price: item.variant.price.amount,
         currency: item.variant.price.currencyCode,
         quantity: item.quantity
-      });
-    }
-    let data = {
+      }
+    });
+
+    const data = {
       transaction_id: event.data.checkout.order.id,
       currency: event.data.checkout.currencyCode,
       value: event.data.checkout.totalPrice.amount,
       shipping: event.data.checkout.shippingLine.price.amount,
       tax: event.data.checkout.totalTax.amount,
       items: items
-    }
-    analyticsTools.ga4.sendEvent("purchase", data);
-    analyticsTools.gtm.sendEvent("checkout_completed", data);
-    analyticsTools.fbq.sendEvent("Purchase", data);
+    };
+
+    sendEventToGoogleAnalytics4("purchase", data);
+    sendEventToGoogleTagManager("checkout_completed", data);
+    sendEventToFacebookPixel("Purchase", {
+      content_ids: items.map(item => item.item_id),
+      content_type: 'product',
+      value: data.value,
+      currency: data.currency
+    });
   }
-  if(analyticsTools.logging) log(JSON.stringify(event));
+
+  if (analyticsTools.logging) {
+    log(JSON.stringify(event));
+  }
 });
