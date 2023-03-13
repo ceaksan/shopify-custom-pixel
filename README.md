@@ -5,7 +5,7 @@ This code is used for integrating analytics tools such as **Google Analytics**, 
 To get started with this code, you need to have the analytics tools' IDs and the necessary permissions to access them. Once you have the IDs, you can add them to the analyticsTools object, as shown in the code. You can also choose which tools to enable by setting the enabled property to true or false.
 
 ### Usage
-The code sets up event listeners for various events such as `collection_viewed`, `page_viewed`, `product_viewed`, `search_submitted`, `product_added_to_cart`, `checkout_started`, `payment_info_submitted`, and `checkout_completed`. When these events occur, the code sends the relevant data to the specified analytics tools using the sendEvent() function defined in the analyticsTools object.
+The code sets up event listeners for various events such as `collection_viewed`, `page_viewed`, `product_viewed`, `search_submitted`, `product_added_to_cart`, `checkout_started`, `payment_info_submitted`, and `checkout_completed`. When these events occur, the code sends the relevant data to the specified analytics tools using the `sendEvent() function defined in the analyticsTools object.
 
 To use this code, follow these steps:
 
