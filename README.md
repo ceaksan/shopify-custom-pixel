@@ -1,4 +1,4 @@
-# README
+# Shopify Custom Pixel
 This code is used for integrating analytics tools such as **Google Analytics**, **Google Tag Manager**, and **Facebook Pixel** to a Shopify website. The code sets up event listeners for various events and sends the relevant data to the specified analytics tools.
 
 ## Getting Started
