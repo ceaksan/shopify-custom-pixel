@@ -1,3 +1,17 @@
+/*
+page_viewed
+collection_viewed
+search_submitted
+product_viewed
+product_added_to_cart
+checkout_started
+checkout_contact_info_submitted
+checkout_address_info_submitted
+checkout_shipping_info_submitted
+payment_info_submitted
+checkout_completed
+*/
+
 const analyticsTools = {
   logging: false,
   ga4: {
